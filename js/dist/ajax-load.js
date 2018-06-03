@@ -98,10 +98,10 @@ var AjaxLoad = function ($) {
         success: function success(result) {
           var wrapper = document.createElement('div');
           wrapper.innerHTML = result;
-          var scripts = Array.from(wrapper.querySelectorAll('script')).map(function (script) {
+          var scripts = Array.from(wrapper.querySelectorAll('script[src]')).map(function (script) {
             return script.attributes.getNamedItem('src').nodeValue;
           });
-          wrapper.querySelectorAll('script').forEach(function (script) {
+          wrapper.querySelectorAll('script[src]').forEach(function (script) {
             return script.parentNode.removeChild(script);
           });
           $('body').animate({

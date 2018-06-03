@@ -105,9 +105,9 @@ const AjaxLoad = (($) => {
           const wrapper = document.createElement('div')
           wrapper.innerHTML = result
 
-          const scripts = Array.from(wrapper.querySelectorAll('script')).map((script) => script.attributes.getNamedItem('src').nodeValue)
+          const scripts = Array.from(wrapper.querySelectorAll('script[src]')).map((script) => script.attributes.getNamedItem('src').nodeValue)
 
-          wrapper.querySelectorAll('script').forEach((script) => script.parentNode.removeChild(script))
+          wrapper.querySelectorAll('script[src]').forEach((script) => script.parentNode.removeChild(script))
 
           $('body').animate({
             scrollTop: 0
