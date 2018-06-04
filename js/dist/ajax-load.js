@@ -63,6 +63,10 @@ var AjaxLoad = function ($) {
 
     // Public
     _proto.loadPage = function loadPage(url) {
+      if (typeof window.preparePage === 'function') {
+        window.preparePage();
+      }
+
       var element = this._element;
       var config = this._config;
 

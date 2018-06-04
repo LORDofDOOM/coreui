@@ -74,6 +74,10 @@ const AjaxLoad = (($) => {
     // Public
 
     loadPage(url) {
+      if (typeof window.preparePage === 'function') {
+        window.preparePage()
+      }
+
       const element = this._element
       const config = this._config
 
