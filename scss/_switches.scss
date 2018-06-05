@@ -264,6 +264,7 @@ $switch-icon-xs-font-size: 7px;
 }
 
 .switch.switch-icon {
+  margin: 0;
   @include switch("icon", $switch-icon-width, $switch-icon-height, $switch-icon-font-size, $handle-margin);
 }
 
