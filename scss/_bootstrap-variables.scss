@@ -37,6 +37,7 @@ $colors: map-merge((
   "gray-900": $gray-900
 ), $colors);
 
+$primary:        $orange !default;
 $secondary:      $gray-300 !default;
 $info:           $orange !default;
 

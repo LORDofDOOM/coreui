@@ -305,6 +305,7 @@
     &:hover {
       color: $sidebar-color;
       text-decoration: none;
+      background: $sidebar-nav-link-hover-bg;
     }
 
     .nav-icon {
