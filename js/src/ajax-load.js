@@ -2,7 +2,7 @@ import $ from 'jquery'
 
 /**
  * --------------------------------------------------------------------------
- * CoreUI (v2.0.1): ajax-load.js
+ * CoreUI (v2.0.3): ajax-load.js
  * Licensed under MIT (https://coreui.io/license)
  * --------------------------------------------------------------------------
  */
@@ -16,7 +16,7 @@ const AjaxLoad = (($) => {
    */
 
   const NAME                       = 'ajaxLoad'
-  const VERSION                    = '2.0.1'
+  const VERSION                    = '2.0.3'
   const DATA_KEY                   = 'coreui.ajaxLoad'
   const JQUERY_NO_CONFLICT         = $.fn[NAME]
 
@@ -72,58 +72,40 @@ const AjaxLoad = (($) => {
     }
 
     // Public
-
     loadPage(url) {
-      if (typeof window.preparePage === 'function') {
-        window.preparePage()
-      }
-
-      const element = this._element
       const config = this._config
 
-      const loadScripts = (src, element = 0) => {
-        const script = document.createElement('script')
-        script.type = 'text/javascript'
-        script.src = src[element]
-        script.className = ClassName.VIEW_SCRIPT
-        // eslint-disable-next-line no-multi-assign
-        script.onload = script.onreadystatechange = function () {
-          if (!this.readyState || this.readyState === 'complete') {
-            if (src.length > element + 1) {
-              loadScripts(src, element + 1)
-            }
-          }
-        }
-        const body = document.getElementsByTagName('body')[0]
-        body.appendChild(script)
+      if (typeof window.beforeHook === 'function') {
+        window.beforeHook()
       }
+
+      window.location.hash = url
 
       $.ajax({
         type : 'GET',
         url : config.subpagesDirectory + url,
         dataType : 'html',
-        beforeSend() {
-          $(Selector.VIEW_SCRIPT).remove()
-        },
         success(result) {
-          const wrapper = document.createElement('div')
-          wrapper.innerHTML = result
-
-          const scripts = Array.from(wrapper.querySelectorAll('script[src]')).map((script) => script.attributes.getNamedItem('src').nodeValue)
-
-          wrapper.querySelectorAll('script[src]').forEach((script) => script.parentNode.removeChild(script))
-
-          $('body').animate({
-            scrollTop: 0
-          }, 0)
-          $(element).html(wrapper)
-          if (scripts.length) {
-            loadScripts(scripts)
+          $('#ui-view').html(result)
+          if (typeof window.afterHook === 'function') {
+            window.afterHook()
           }
-          window.location.hash = url
         },
         error() {
-          window.location.href = config.errorPage
+          $.ajax({
+            type : 'GET',
+            url : config.errorPage,
+            dataType : 'html',
+            success(result) {
+              $('#ui-view').html(result)
+              if (typeof window.afterHook === 'function') {
+                window.afterHook()
+              }
+            },
+            error() {
+              window.location.href = config.errorPage
+            }
+          })
         }
       })
     }
@@ -137,12 +119,14 @@ const AjaxLoad = (($) => {
 
       // Setup Breadcrumb
       let menuName = '<li class="breadcrumb-item"><a href="/">Home</a></li>'
+      /* eslint-disable */
       $.menuElement = $('nav .nav li:has(a[href="' + url.split('?')[0] + '"])')
       if ($.menuElement.parent().parent().hasClass('nav-dropdown open')) {
         $.menuElementParentName = $.menuElement.parent().parent().find('span:first').text()
-        menuName = menuName + '<li class="breadcrumb-item">' + $.menuElementParentName + '</li>'
+        menuName += '<li class="breadcrumb-item">' + $.menuElementParentName + '</li>'
       }
-      menuName = menuName + '<li class="breadcrumb-item active">' + $('nav .nav li:has(a[href="' + url.split('?')[0] + '"])').find('.active').find('span').first().text() + '</li>'
+      menuName += '<li class="breadcrumb-item active">' + $('nav .nav li:has(a[href="' + url.split('?')[0] + '"])').find('.active').find('span').first().text() + '</li>'
+      /* eslint-enable */
       $('#breadcrumb').html(menuName)
 
       this.loadPage(url)
@@ -167,6 +151,12 @@ const AjaxLoad = (($) => {
     }
 
     _addEventListeners() {
+      $(document).on(Event.CLICK, '.ajaxLink', (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        this.loadPage(event.currentTarget.getAttribute('href'))
+      })
+
       $(document).on(Event.CLICK, `${Selector.NAV_LINK}[href!="#"]`, (event) => {
         event.preventDefault()
         event.stopPropagation()

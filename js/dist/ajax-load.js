@@ -4,7 +4,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 /**
  * --------------------------------------------------------------------------
- * CoreUI (v2.0.1): ajax-load.js
+ * CoreUI (v2.0.3): ajax-load.js
  * Licensed under MIT (https://coreui.io/license)
  * --------------------------------------------------------------------------
  */
@@ -15,7 +15,7 @@ var AjaxLoad = function ($) {
    * ------------------------------------------------------------------------
    */
   var NAME = 'ajaxLoad';
-  var VERSION = '2.0.1';
+  var VERSION = '2.0.3';
   var DATA_KEY = 'coreui.ajaxLoad';
   var JQUERY_NO_CONFLICT = $.fn[NAME];
   var ClassName = {
@@ -63,64 +63,40 @@ var AjaxLoad = function ($) {
 
     // Public
     _proto.loadPage = function loadPage(url) {
-      if (typeof window.preparePage === 'function') {
-        window.preparePage();
-      }
-
-      var element = this._element;
       var config = this._config;
 
-      var loadScripts = function loadScripts(src, element) {
-        if (element === void 0) {
-          element = 0;
-        }
+      if (typeof window.beforeHook === 'function') {
+        window.beforeHook();
+      }
 
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = src[element];
-        script.className = ClassName.VIEW_SCRIPT; // eslint-disable-next-line no-multi-assign
-
-        script.onload = script.onreadystatechange = function () {
-          if (!this.readyState || this.readyState === 'complete') {
-            if (src.length > element + 1) {
-              loadScripts(src, element + 1);
-            }
-          }
-        };
-
-        var body = document.getElementsByTagName('body')[0];
-        body.appendChild(script);
-      };
-
+      window.location.hash = url;
       $.ajax({
         type: 'GET',
         url: config.subpagesDirectory + url,
         dataType: 'html',
-        beforeSend: function beforeSend() {
-          $(Selector.VIEW_SCRIPT).remove();
-        },
         success: function success(result) {
-          var wrapper = document.createElement('div');
-          wrapper.innerHTML = result;
-          var scripts = Array.from(wrapper.querySelectorAll('script[src]')).map(function (script) {
-            return script.attributes.getNamedItem('src').nodeValue;
-          });
-          wrapper.querySelectorAll('script[src]').forEach(function (script) {
-            return script.parentNode.removeChild(script);
-          });
-          $('body').animate({
-            scrollTop: 0
-          }, 0);
-          $(element).html(wrapper);
+          $('#ui-view').html(result);
 
-          if (scripts.length) {
-            loadScripts(scripts);
+          if (typeof window.afterHook === 'function') {
+            window.afterHook();
           }
-
-          window.location.hash = url;
         },
         error: function error() {
-          window.location.href = config.errorPage;
+          $.ajax({
+            type: 'GET',
+            url: config.errorPage,
+            dataType: 'html',
+            success: function success(result) {
+              $('#ui-view').html(result);
+
+              if (typeof window.afterHook === 'function') {
+                window.afterHook();
+              }
+            },
+            error: function error() {
+              window.location.href = config.errorPage;
+            }
+          });
         }
       });
     };
@@ -132,14 +108,18 @@ var AjaxLoad = function ($) {
       $(Selector.NAV_ITEM + " a[href=\"" + url.split('?')[0] + "\"]").addClass(ClassName.ACTIVE); // Setup Breadcrumb
 
       var menuName = '<li class="breadcrumb-item"><a href="/">Home</a></li>';
+      /* eslint-disable */
+
       $.menuElement = $('nav .nav li:has(a[href="' + url.split('?')[0] + '"])');
 
       if ($.menuElement.parent().parent().hasClass('nav-dropdown open')) {
         $.menuElementParentName = $.menuElement.parent().parent().find('span:first').text();
-        menuName = menuName + '<li class="breadcrumb-item">' + $.menuElementParentName + '</li>';
+        menuName += '<li class="breadcrumb-item">' + $.menuElementParentName + '</li>';
       }
 
-      menuName = menuName + '<li class="breadcrumb-item active">' + $('nav .nav li:has(a[href="' + url.split('?')[0] + '"])').find('.active').find('span').first().text() + '</li>';
+      menuName += '<li class="breadcrumb-item active">' + $('nav .nav li:has(a[href="' + url.split('?')[0] + '"])').find('.active').find('span').first().text() + '</li>';
+      /* eslint-enable */
+
       $('#breadcrumb').html(menuName);
       this.loadPage(url);
     };
@@ -161,6 +141,12 @@ var AjaxLoad = function ($) {
     _proto._addEventListeners = function _addEventListeners() {
       var _this = this;
 
+      $(document).on(Event.CLICK, '.ajaxLink', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        _this.loadPage(event.currentTarget.getAttribute('href'));
+      });
       $(document).on(Event.CLICK, Selector.NAV_LINK + "[href!=\"#\"]", function (event) {
         event.preventDefault();
         event.stopPropagation();

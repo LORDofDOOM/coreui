@@ -1,5 +1,5 @@
 /*!
-  * CoreUI v2.0.1 (https://coreui.io)
+  * CoreUI v2.0.3 (https://coreui.io)
   * Copyright 2018 Łukasz Holeczek
   * Licensed under MIT (https://coreui.io)
   */
@@ -30,7 +30,7 @@
 
   /**
    * --------------------------------------------------------------------------
-   * CoreUI (v2.0.1): ajax-load.js
+   * CoreUI (v2.0.3): ajax-load.js
    * Licensed under MIT (https://coreui.io/license)
    * --------------------------------------------------------------------------
    */
@@ -42,7 +42,7 @@
      * ------------------------------------------------------------------------
      */
     var NAME = 'ajaxLoad';
-    var VERSION = '2.0.1';
+    var VERSION = '2.0.3';
     var DATA_KEY = 'coreui.ajaxLoad';
     var JQUERY_NO_CONFLICT = $$$1.fn[NAME];
     var ClassName = {
@@ -90,64 +90,40 @@
 
       // Public
       _proto.loadPage = function loadPage(url) {
-        if (typeof window.preparePage === 'function') {
-          window.preparePage();
-        }
-
-        var element = this._element;
         var config = this._config;
 
-        var loadScripts = function loadScripts(src, element) {
-          if (element === void 0) {
-            element = 0;
-          }
+        if (typeof window.beforeHook === 'function') {
+          window.beforeHook();
+        }
 
-          var script = document.createElement('script');
-          script.type = 'text/javascript';
-          script.src = src[element];
-          script.className = ClassName.VIEW_SCRIPT; // eslint-disable-next-line no-multi-assign
-
-          script.onload = script.onreadystatechange = function () {
-            if (!this.readyState || this.readyState === 'complete') {
-              if (src.length > element + 1) {
-                loadScripts(src, element + 1);
-              }
-            }
-          };
-
-          var body = document.getElementsByTagName('body')[0];
-          body.appendChild(script);
-        };
-
+        window.location.hash = url;
         $$$1.ajax({
           type: 'GET',
           url: config.subpagesDirectory + url,
           dataType: 'html',
-          beforeSend: function beforeSend() {
-            $$$1(Selector.VIEW_SCRIPT).remove();
-          },
           success: function success(result) {
-            var wrapper = document.createElement('div');
-            wrapper.innerHTML = result;
-            var scripts = Array.from(wrapper.querySelectorAll('script[src]')).map(function (script) {
-              return script.attributes.getNamedItem('src').nodeValue;
-            });
-            wrapper.querySelectorAll('script[src]').forEach(function (script) {
-              return script.parentNode.removeChild(script);
-            });
-            $$$1('body').animate({
-              scrollTop: 0
-            }, 0);
-            $$$1(element).html(wrapper);
+            $$$1('#ui-view').html(result);
 
-            if (scripts.length) {
-              loadScripts(scripts);
+            if (typeof window.afterHook === 'function') {
+              window.afterHook();
             }
-
-            window.location.hash = url;
           },
           error: function error() {
-            window.location.href = config.errorPage;
+            $$$1.ajax({
+              type: 'GET',
+              url: config.errorPage,
+              dataType: 'html',
+              success: function success(result) {
+                $$$1('#ui-view').html(result);
+
+                if (typeof window.afterHook === 'function') {
+                  window.afterHook();
+                }
+              },
+              error: function error() {
+                window.location.href = config.errorPage;
+              }
+            });
           }
         });
       };
@@ -159,14 +135,18 @@
         $$$1(Selector.NAV_ITEM + " a[href=\"" + url.split('?')[0] + "\"]").addClass(ClassName.ACTIVE); // Setup Breadcrumb
 
         var menuName = '<li class="breadcrumb-item"><a href="/">Home</a></li>';
+        /* eslint-disable */
+
         $$$1.menuElement = $$$1('nav .nav li:has(a[href="' + url.split('?')[0] + '"])');
 
         if ($$$1.menuElement.parent().parent().hasClass('nav-dropdown open')) {
           $$$1.menuElementParentName = $$$1.menuElement.parent().parent().find('span:first').text();
-          menuName = menuName + '<li class="breadcrumb-item">' + $$$1.menuElementParentName + '</li>';
+          menuName += '<li class="breadcrumb-item">' + $$$1.menuElementParentName + '</li>';
         }
 
-        menuName = menuName + '<li class="breadcrumb-item active">' + $$$1('nav .nav li:has(a[href="' + url.split('?')[0] + '"])').find('.active').find('span').first().text() + '</li>';
+        menuName += '<li class="breadcrumb-item active">' + $$$1('nav .nav li:has(a[href="' + url.split('?')[0] + '"])').find('.active').find('span').first().text() + '</li>';
+        /* eslint-enable */
+
         $$$1('#breadcrumb').html(menuName);
         this.loadPage(url);
       };
@@ -188,6 +168,12 @@
       _proto._addEventListeners = function _addEventListeners() {
         var _this = this;
 
+        $$$1(document).on(Event.CLICK, '.ajaxLink', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          _this.loadPage(event.currentTarget.getAttribute('href'));
+        });
         $$$1(document).on(Event.CLICK, Selector.NAV_LINK + "[href!=\"#\"]", function (event) {
           event.preventDefault();
           event.stopPropagation();
