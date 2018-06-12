@@ -5,7 +5,7 @@
   padding: 0;
   margin: 0;
   background-color: $navbar-bg;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+  @include borders($navbar-border);
 
   .navbar-brand {
     display: inline-flex;
@@ -15,29 +15,12 @@
     height: $navbar-height;
     padding: 0;
     margin-right: 0;
-    overflow: hidden;
     background-color: $navbar-brand-bg;
+    @include borders($navbar-brand-border);
 
     .navbar-brand-minimized {
       display: none;
     }
-  }
-
-  button {
-    line-height: $navbar-height;
-
-    &:hover {
-      background-color: #e08e0b;
-    }
-  }
-
-  .sidebar-toggler::before {
-    float: left;
-	/* stylelint-disable */
-    font-family: fontAwesome;
-    content: "\f0c9";
-    background-color: transparent;
-    background-image: none;
   }
 
   .navbar-toggler {
@@ -57,10 +40,6 @@
   .navbar-nav {
     flex-direction: row;
     align-items: center;
-
-    ul {
-      list-style-type: none;
-    }
   }
 
   .nav-item {
@@ -91,19 +70,6 @@
         height: $navbar-height - 20px;
         margin: 0 10px;
       }
-
-      a.nav-link {
-        line-height: $navbar-height;
-        padding-left: 15px;
-        padding-right: 15px;
-        color: #FFF;
-      }
-
-      a.nav-link:hover {
-        background: rgba(0, 0, 0, .1) !important;
-        color: #f6f6f6 !important;
-      }	
-
     }
   }
 
