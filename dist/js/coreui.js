@@ -78,7 +78,7 @@
 
         if (url !== '') {
           this.setUpUrl(url);
-        } else {
+        } else if ($$$1('#ui-view').html() === '') {
           this.setUpUrl(this._config.defaultPage);
         }
 
@@ -96,10 +96,10 @@
           window.beforeHook();
         }
 
-        window.location.hash = url;
+        window.location.hash = url.replace('/#/', '/');
         $$$1.ajax({
           type: 'GET',
-          url: config.subpagesDirectory + url,
+          url: config.subpagesDirectory + url.replace('/#/', '/'),
           dataType: 'html',
           success: function success(result) {
             $$$1('#ui-view').html(result);
@@ -168,22 +168,19 @@
       _proto._addEventListeners = function _addEventListeners() {
         var _this = this;
 
-        $$$1(document).on(Event.CLICK, '.ajaxLink', function (event) {
-          event.preventDefault();
-          event.stopPropagation();
+        $$$1(document).on(Event.CLICK, '[href]', function (event) {
+          // console.log($(this).attr('href'))
+          if (event.currentTarget.getAttribute('href').startsWith('/#/')) {
+            event.preventDefault();
+            event.stopPropagation(); // console.log("ajax")
 
-          _this.loadPage(event.currentTarget.getAttribute('href'));
-        });
-        $$$1(document).on(Event.CLICK, Selector.NAV_LINK + "[href!=\"#\"]", function (event) {
-          event.preventDefault();
-          event.stopPropagation();
-
-          if (event.currentTarget.target === '_top') {
-            _this.loadTop(event.currentTarget.href);
-          } else if (event.currentTarget.target === '_blank') {
-            _this.loadBlank(event.currentTarget.href);
-          } else {
-            _this.setUpUrl(event.currentTarget.getAttribute('href'));
+            if (event.currentTarget.target === '_top') {
+              _this.loadTop(event.currentTarget.href);
+            } else if (event.currentTarget.target === '_blank') {
+              _this.loadBlank(event.currentTarget.href);
+            } else {
+              _this.setUpUrl(event.currentTarget.getAttribute('href'));
+            }
           }
         });
       }; // Static

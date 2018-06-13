@@ -55,7 +55,7 @@ const AjaxLoad = (($) => {
 
       if (url !== '') {
         this.setUpUrl(url)
-      } else {
+      } else if ($('#ui-view').html() === '') {
         this.setUpUrl(this._config.defaultPage)
       }
       this._addEventListeners()
@@ -79,11 +79,10 @@ const AjaxLoad = (($) => {
         window.beforeHook()
       }
 
-      window.location.hash = url
-
+      window.location.hash = url.replace('/#/', '/')
       $.ajax({
         type : 'GET',
-        url : config.subpagesDirectory + url,
+        url : config.subpagesDirectory + url.replace('/#/', '/'),
         dataType : 'html',
         success(result) {
           $('#ui-view').html(result)
@@ -151,22 +150,19 @@ const AjaxLoad = (($) => {
     }
 
     _addEventListeners() {
-      $(document).on(Event.CLICK, '.ajaxLink', (event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        this.loadPage(event.currentTarget.getAttribute('href'))
-      })
-
-      $(document).on(Event.CLICK, `${Selector.NAV_LINK}[href!="#"]`, (event) => {
-        event.preventDefault()
-        event.stopPropagation()
-
-        if (event.currentTarget.target === '_top') {
-          this.loadTop(event.currentTarget.href)
-        } else if (event.currentTarget.target === '_blank') {
-          this.loadBlank(event.currentTarget.href)
-        } else {
-          this.setUpUrl(event.currentTarget.getAttribute('href'))
+      $(document).on(Event.CLICK, '[href]', (event) => {
+        // console.log($(this).attr('href'))
+        if (event.currentTarget.getAttribute('href').startsWith('/#/')) {
+          event.preventDefault()
+          event.stopPropagation()
+          // console.log("ajax")
+          if (event.currentTarget.target === '_top') {
+            this.loadTop(event.currentTarget.href)
+          } else if (event.currentTarget.target === '_blank') {
+            this.loadBlank(event.currentTarget.href)
+          } else {
+            this.setUpUrl(event.currentTarget.getAttribute('href'))
+          }
         }
       })
     }
